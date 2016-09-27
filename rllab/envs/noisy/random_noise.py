@@ -105,6 +105,31 @@ class DroppedObservationsEnv(GeneralizedNoisyEnv, Serializable):
 
 		return copy
 
+class DuplicateObservationsEnv(GeneralizedNoisyEnv, Serializable):
+
+	def __init__(self, probability=0, placeholder=0):
+		super(DroppedObservationsEnv, self).__init__(env)
+		Serializable.quick_init(self, locals())
+		self.probability = probability
+		self.last = None
+		self.placeholder = placeholder
+
+
+	@overrides
+	def inject_obs_noise(self, obs):
+		r = random.random()
+		prev = self.last
+		self.last = obs
+
+		if r >= probability:
+			return obs
+
+		if self.last == None:
+			return np.fill(obs.shape, self.placeholder)
+
+		return prev
+
+
 
 class PoissonNoiseEnv(GeneralizedNoisyEnv, Serializable):
 
