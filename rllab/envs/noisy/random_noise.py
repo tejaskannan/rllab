@@ -124,7 +124,7 @@ class DuplicateObservationsEnv(GeneralizedNoisyEnv, Serializable):
 		if r >= probability:
 			return obs
 
-		if self.last == None:
+		if prev == None:
 			return np.fill(obs.shape, self.placeholder)
 
 		return prev
