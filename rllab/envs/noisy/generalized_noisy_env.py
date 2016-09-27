@@ -13,7 +13,6 @@ class GeneralizedNoisyEnv(ProxyEnv, Serializable):
                        'problem non-Markovian!)')
     def __init__(self, env):
         super(GeneralizedNoisyEnv, self).__init__(env)
-        Serializable.quick_init(self, locals())
 
     def get_obs_noise_scale_factor(self, obs):
         return np.ones_like(obs)
@@ -27,12 +26,17 @@ class GeneralizedNoisyEnv(ProxyEnv, Serializable):
         raise NotImplementedError("No Noise Function Defined")
 
     def get_current_obs(self):
-        return self.inject_obs_noise(self._wrapped_env.get_current_obs())
+        obs = self._wrapped_env.get_current_obs()
+        noisy_obs = self.inject_obs_noise(obs)
+        return noisy_obs
 
-    def get_signal_to_noise_ratio(self, obs, noisy_obs):
+    # Computes the signal to noise ratio by taking the trace of the observation
+    # over the trace of the noise. noise_obs is the noisy observation that was obtained
+    def compute_signal_to_noise_ratio(self, obs, noisy_obs):
         noise = noisy_obs - obs
-        return np.var(obs) / np.var(noise) # LOOK UP SNR CALCULATIONS
-
+        noise_trace = np.trace(noise)
+        obs_trace = np.trace(obs)
+        return obs_trace / noise_trace
 
 
     @overrides
