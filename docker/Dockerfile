@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 # ========== Anaconda ==========
 # https://github.com/ContinuumIO/docker-images/blob/master/anaconda/Dockerfile
@@ -36,18 +36,28 @@ RUN apt-get -y install libxrandr2 libxinerama-dev libxi6 libxcursor-dev
 RUN apt-get install -y vim ack-grep
 RUN pip install --upgrade pip
 # usual pip install pygame will fail
-#RUN conda install --yes -c https://conda.anaconda.org/kne pybox2d
-#RUN conda install --yes -c https://conda.binstar.org/tlatorre pygame
-RUN sudo apt-get build-dep -y python-pygame
+RUN apt-get build-dep -y python-pygame
+RUN pip install Pillow
+
+# ========== OpenAI Gym ==========
+RUN apt-get -y install libgtk2.0-0
+RUN pip install gym
+#RUN apt-get -y install ffmpeg
+RUN apt-get -y install libav-tools
+CMD alias ffmpeg="avconv"
 
 # ========== Add codebase stub ==========
-
 CMD mkdir /root/code
 ADD environment.yml /root/code/environment.yml
 RUN conda env create -f /root/code/environment.yml
 
 ENV PYTHONPATH /root/code/rllab:$PYTHONPATH
-ENV PATH /opt/conda/envs/rllab/bin:$PATH
-RUN echo "source activate rllab" >> /root/.bashrc
+ENV PATH /opt/conda/envs/rllab3/bin:$PATH
+RUN echo "source activate rllab3" >> /root/.bashrc
 ENV BASH_ENV /root/.bashrc
 WORKDIR /root/code
+
+# gpu theanno
+ENV THEANO_FLAGS mode=FAST_RUN,device=gpu,floatX=float32
+
+

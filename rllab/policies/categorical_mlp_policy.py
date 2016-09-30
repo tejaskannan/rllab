@@ -10,6 +10,7 @@ from rllab.misc.overrides import overrides
 from rllab.policies.base import StochasticPolicy
 from rllab.spaces import Discrete
 
+import numpy as np
 
 class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered, Serializable):
     def __init__(
@@ -17,6 +18,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered, Serializable):
             env_spec,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=NL.tanh,
+            num_seq_inputs=1,
             prob_network=None,
     ):
         """
@@ -33,7 +35,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered, Serializable):
 
         if prob_network is None:
             prob_network = MLP(
-                input_shape=(env_spec.observation_space.flat_dim,),
+                input_shape=(env_spec.observation_space.flat_dim * num_seq_inputs,),
                 output_dim=env_spec.action_space.n,
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
@@ -63,19 +65,21 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered, Serializable):
     # of length N, where each entry is the density value for that action, under
     # the current policy
     @overrides
-    def get_action(self, observation):
+    def get_action(self, observation, deterministic=False):
         flat_obs = self.observation_space.flatten(observation)
         prob = self._f_prob([flat_obs])[0]
-        action = self.action_space.weighted_sample(prob)
+        if deterministic:
+            action = np.argmax(prob)
+        else:
+            action = self.action_space.weighted_sample(prob)
         return action, dict(prob=prob)
 
     def get_actions(self, observations):
         flat_obs = self.observation_space.flatten_n(observations)
         probs = self._f_prob(flat_obs)
-        actions = map(self.action_space.weighted_sample, probs)
+        actions = list(map(self.action_space.weighted_sample, probs))
         return actions, dict(prob=probs)
 
     @property
     def distribution(self):
         return self._dist
-
