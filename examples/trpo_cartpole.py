@@ -22,6 +22,6 @@ algo = TRPO(
     max_path_length=100,
     n_itr=40,
     discount=0.99,
-    step_size=0.01,
+    step_size=0.01
 )
 algo.train()

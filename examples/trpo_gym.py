@@ -1,6 +1,3 @@
-
-
-
 from rllab.algos.trpo import TRPO
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.envs.gym_env import GymEnv
@@ -10,7 +7,7 @@ from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 stub(globals())
 
-env = normalize(GymEnv("Pendulum-v0"))
+env = normalize(GymEnv("MountainCarContinuous-v0"))
 
 policy = GaussianMLPPolicy(
     env_spec=env.spec,
@@ -26,7 +23,7 @@ algo = TRPO(
     baseline=baseline,
     batch_size=4000,
     max_path_length=env.horizon,
-    n_itr=50,
+    n_itr=75,
     discount=0.99,
     step_size=0.01,
     # Uncomment both lines (this and the plot parameter below) to enable plotting

@@ -1,46 +1,47 @@
 from rllab.algos.trpo import TRPO
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.noisy.random_noise import GaussianNoiseEnv
-from rllab.envs.noisy.random_noise import LaplaceNoiseEnv
+from rllab.envs.noisy.random_noise import DroppedObservationsEnv
 from rllab.envs.gym_env import GymEnv
 from rllab.envs.normalized_env import normalize
 from rllab.misc.instrument import stub, run_experiment_lite
 from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from rllab.policies.gaussian_gru_policy import GaussianGRUPolicy
-from rllab.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer, FiniteDifferenceHvp
-
 
 stub(globals())
 
-sigmaLimit = 3.25
-increment = 0.25
-#modelName = "Pendulum-v0"
-modelName = "MountainCarContinuous-v0"
+probLimit = 1
+increment = 0.1
+modelName = "Pendulum-v0"
 neuronNum = 8
 policies = [["Gaussian_MLP_8", GaussianMLPPolicy, [neuronNum, 0]], 
-          ["Gaussian_MLP_8_8", GaussianMLPPolicy, [neuronNum, neuronNum]],
-         ["Gaussian_GRU_8", GaussianGRUPolicy, [neuronNum, 0]]]
-randomEnvs = [["Laplace", LaplaceNoiseEnv], ["Gaussian", GaussianNoiseEnv]]
+            ["Gaussian_MLP_8_8", GaussianMLPPolicy, [neuronNum, neuronNum]],
+            ["Gaussian_GRU_8", GaussianGRUPolicy, [neuronNum, 0]]]
 
-log_base = "/Users/Tejas/Desktop/Research/rllab/data/local/experiment/mountaincar/"
+log_base = "/Users/Tejas/Desktop/Research/rllab/data/local/experiment/updated/"
+envName = "DroppedObservations"
+replace = False
 
-for randomEnvInfo in randomEnvs:
-    randomEnvName = randomEnvInfo[0]
-    randomEnv = randomEnvInfo[1] 
-
+for i in range(0, 2):
     for policyInfo in policies:
         
         policyName = policyInfo[0]
         policy = policyInfo[1]
         neurons = policyInfo[2]
 
-        sigma = 0
-        while sigma <= sigmaLimit:
+        prob = 0
+        while prob <= probLimit:
 
+            if (i == 0 and (policyName == "Gaussian_MLP_8" or policyName == "Gaussian_MLP_8_8")):
+                prob = probLimit + 1
+                continue
 
-            gym_env = normalize(GymEnv(modelName, record_video=False))
-            env = normalize(GaussianNoiseEnv(gym_env, sigma=sigma))
-            log_dir = log_base + randomEnvName + "_" + policyName + "_" + str(sigma) + "/"
+            gym_env = normalize(GymEnv(modelName))
+            env = normalize(DroppedObservationsEnv(gym_env, probability=prob, replace=replace))
+
+            if (replace):
+                log_dir = log_base + envName + "_" + policyName + "_Replaced_" + str(prob) + "/"
+            else:
+                log_dir = log_base + envName + "_" + policyName + "_" + str(prob) + "/"
 
             if neurons[1] == 0:
                 neuronLevels = (neurons[0],)
@@ -65,9 +66,7 @@ for randomEnvInfo in randomEnvs:
                 discount=0.99,
                 step_size=0.01,
                 # Uncomment both lines (this and the plot parameter below) to enable plotting
-                plot=True,
-                optimizer=ConjugateGradientOptimizer(hvp_approach=FiniteDifferenceHvp(base_eps=1e-5))
-
+                plot=True
             )
 
             run_experiment_lite(
@@ -83,6 +82,5 @@ for randomEnvInfo in randomEnvs:
                 log_dir=log_dir
             )
 
-            sigma += increment
-
-
+            prob += increment
+    replace = True
