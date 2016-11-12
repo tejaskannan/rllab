@@ -24,15 +24,16 @@ class GaussianNoiseEnv(GeneralizedNoisyEnv, Serializable):
 # Environment with Laplace Noise
 class LaplaceNoiseEnv(GeneralizedNoisyEnv, Serializable):
 
-	def __init__(self, env, mu=0, sigma=1):
+	def __init__(self, env, mu=0, scale=1, factor=1):
 		super(LaplaceNoiseEnv, self).__init__(env)
 		Serializable.quick_init(self, locals())
 		self.mu = mu
-		self.sigma = sigma
+		self.scale = scale
+		self.factor = factor
 
 	@overrides
 	def inject_obs_noise(self, obs):
-		noise = np.random.laplace(self.mu, self.sigma, obs.shape)
+		noise = np.random.laplace(self.mu, self.scale, obs.shape) * self.factor
 		return obs + noise
 
 
@@ -83,51 +84,43 @@ class DroppedObservationsEnv(GeneralizedNoisyEnv, Serializable):
 	def inject_obs_noise(self, obs):
 		copy = np.copy(obs)
 		rows = obs.shape[0]
-		cols = obs.shape[1]
+		
 		random_vals = np.random.uniform(0, 1, obs.shape)
 
 		dropped = False
 
-		for i in range(0, rows):
-			for j in range(0, cols):
-				sample = random[i, j]
-				if (sample < probability):
-					copy[i, j] = placeholder
-					dropped = True
+		if len(obs.shape) > 1:
+			cols = obs.shape[1]
+			for i in range(0, rows):
+				for j in range(0, cols):
+					sample = random_vals[i, j]
+					if (sample < self.probability):
+						copy[i, j] = self.placeholder
+						dropped = True
+		else:
+			for i in range(0, rows):
+					sample = random_vals[i]
+					if (sample < self.probability):
+						copy[i] = self.placeholder
+						dropped = True
 
 		if self.replace:
 			if dropped:
 				if self.last_correct == None:
-					return np.fill(obs.shape, placeholder)
+					placeholder_obs = np.empty(obs.shape)
+					placeholder_obs.fill(self.placeholder)
+					return placeholder_obs
 				return self.last_correct
 			else:
 				self.last_correct = obs
 
 		return copy
 
-class DuplicateObservationsEnv(GeneralizedNoisyEnv, Serializable):
+class DroppedObservationsReplaceEnv(DroppedObservationsEnv, Serializable):
 
-	def __init__(self, probability=0, placeholder=0):
-		super(DroppedObservationsEnv, self).__init__(env)
+	def __init__(self, env, probability=0, placeholder=0):
+		super(DroppedObservationsReplaceEnv, self).__init__(env, probability, placeholder, True)
 		Serializable.quick_init(self, locals())
-		self.probability = probability
-		self.last = None
-		self.placeholder = placeholder
-
-
-	@overrides
-	def inject_obs_noise(self, obs):
-		r = random.random()
-		prev = self.last
-		self.last = obs
-
-		if r >= probability:
-			return obs
-
-		if prev == None:
-			return np.fill(obs.shape, self.placeholder)
-
-		return prev
 
 
 
