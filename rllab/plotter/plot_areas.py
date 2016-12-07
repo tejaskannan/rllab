@@ -73,6 +73,29 @@ def get_experiment_values_averaged(csv_file_paths, property_name):
 		file_num += 1
 	return x, [v / file_num for v in vals]
 
+def get_performance_value(csv_file_path):
+	vals = []
+	x = []
+	iterations, rewards = get_experiment_values(csv_file_path, "AverageReturn")
+	return sum(rewards) / len(iterations)
+
+def plot_performance_values(csv_file_base, policies, noise, parameters, iters, ymin, ymax, xLabel, yLabel="Performance"):
+	filename = "/progress.csv"
+	performances = []
+	title = "Algorithm Performance"
+	for policy in policies:
+		performance = []
+		for param in parameters:
+			progressFile = csv_file_base + noise + "_" + policy + "_" + str(round(param,3)) + filename
+			perf = get_performance_value(progressFile)
+			performance.append(perf)
+		performances.append(performance)
+
+	graphFileName = csv_file_base + "Performance_" + noise + ".png"
+	rounded = [round(x, 3) for x in parameters]
+	plot((rounded, performances), title, xLabel, yLabel, legend=policies, ymin=ymin, ymax=ymax, filename=graphFileName)
+
+
 # Calculate Area using Trapezoids
 def area_under_curve(lstX, lstY):
 	first = 0
@@ -138,7 +161,8 @@ def plot_areas_averaged(paths, noise_names, policy_names, variables, ymin, ymax,
 			averaged = [a / file_num for a in areas]
 			aggregated.append(averaged)
 
-		graphFileName = "/Users/Tejas/Desktop/Research/Area_" + noise + ".png"
+		path = paths[0];
+		graphFileName =  path + "Area_" + noise + ".png"
 		rounded = [round(x, 3) for x in variables]
 		plot((rounded, aggregated), title, xLabel, yLabel, legend=policy_names, ymin=ymin, ymax=ymax, filename=graphFileName)
 
@@ -172,31 +196,43 @@ def plot_learning_curve_averaged(paths, noise_name, policy_name, parameter, ymin
 	plot((iterations, [rewards]), title, xLabel, yLabel, legend=policy_name, ymin=ymin, ymax=ymax, loc='lower right', filename=graphFileName)
 
 
+
+
+file_path_base = "/Users/Tejas/Desktop/Research/rllab/data/local/experiment/pendulum_32_vpg/"
+variables = [x*0.1 for x in range(0,6)]
+policies = ["GaussianMLP_32_32", "GaussianGRU_32_0"]
+iterations = 75
+plot_performance_values(file_path_base, policies, "Gaussian", variables, iterations, -1200, 0, "Variance")
+plot_performance_values(file_path_base, policies, "Laplace", variables, iterations, -1200, 0, "Scale Factor")
+plot_performance_values(file_path_base, policies, "DroppedObservations", variables, iterations, -1200, 0, "Probability")
+plot_performance_values(file_path_base, policies, "DroppedObservationsReplace", variables, iterations, -1200, 0, "Probability")
+
+
 # noises = ["DroppedObservations", "DroppedObservationsReplace"]
 # variables = [x*0.1 for x in range(0, 11)]
 # x_label = "Probability"
 # ymin = -250
 # ymax = 100
-noises = ["Laplace", "Gaussian"]
-variables = [x*0.1 for x in range(0,6)]
-x_label = "Scale Factor" 
-ymin = -35000
-ymax = -20000
-mlp_single = "GaussianMLP_8_0"
-mlp_double = "GaussianMLP_8_8"
-gru_single = "GaussianGRU_8_0"
-gaussian = "Gaussian"
-laplace = "Laplace"
+# noises = ["Laplace"]
+# variables = [x*0.1 for x in range(0,6)]
+# x_label = "Scale Factor" 
+# ymin = -800
+# ymax = -300
+# mlp_single = "GaussianMLP_8_0"
+# mlp_double = "GaussianMLP_8_8"
+# gru_single = "GaussianGRU_8_0"
+# gaussian = "Gaussian"
+# laplace = "Laplace"
 
-path = "/Users/Tejas/Desktop/Research/rllab/data/local/experiment/mountaincar_v4/"
-paths = ["/Users/Tejas/Desktop/Research/rllab/data/local/experiment/mountaincar_v5/", "/Users/Tejas/Desktop/Research/rllab/data/local/experiment/mountaincar_v6/", "/Users/Tejas/Desktop/Research/rllab/data/local/experiment/mountaincar_v7/"]
-policy_names = [mlp_single, mlp_double, gru_single]
-#policy_names = ["CategoricalMLP_8_0", "CategoricalMLP_8_8"]
+# path = "/Users/Tejas/Desktop/Research/rllab/data/local/experiment/mountaincar_v4/"
+# paths = ["/Users/Tejas/Desktop/Research/rllab/data/local/experiment/pendulum_vpg_v1/"]
+# policy_names = [mlp_single, mlp_double, gru_single]
+# #policy_names = ["CategoricalMLP_8_0", "CategoricalMLP_8_8"]
 
-incr = 0.1
-start = 0.0
-end = 0.5
-plot_areas_averaged(paths, noises, policy_names, variables, ymin, ymax, x_label)
+# incr = 0.1
+# start = 0.0
+# end = 0.5
+# #plot_areas_averaged(paths, noises, policy_names, variables, ymin, ymax, x_label)
 # for noise in noises:
 # 	for policy in policy_names:
 # 		param = start

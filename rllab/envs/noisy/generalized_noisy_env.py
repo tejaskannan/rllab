@@ -1,5 +1,5 @@
 import numpy as np
-
+import csv
 from rllab.core.serializable import Serializable
 from rllab.envs.base import Step
 from rllab.envs.proxy_env import ProxyEnv
@@ -11,8 +11,13 @@ class GeneralizedNoisyEnv(ProxyEnv, Serializable):
     @autoargs.arg('obs_noise', type=float,
                   help='Noise added to the observations (note: this makes the '
                        'problem non-Markovian!)')
-    def __init__(self, env):
+    def __init__(self, env, logBase=None):
         super(GeneralizedNoisyEnv, self).__init__(env)
+        self.logFile = logBase
+        if (logBase != None):
+            self.logFile += "snr.csv"
+        self.iteration = 0
+        self.write_row(["Iteration", "Observation Norm", "Noise Norm"])
 
     def get_obs_noise_scale_factor(self, obs):
         return np.ones_like(obs)
@@ -32,11 +37,19 @@ class GeneralizedNoisyEnv(ProxyEnv, Serializable):
 
     # Computes the signal to noise ratio by taking the trace of the observation
     # over the trace of the noise. noise_obs is the noisy observation that was obtained
-    def compute_signal_to_noise_ratio(self, obs, noisy_obs):
-        noise = noisy_obs - obs
-        noise_trace = np.trace(noise)
-        obs_trace = np.trace(obs)
-        return obs_trace / noise_trace
+    def log_snr(self, obs, noise):
+        obs_norm = np.linalg.norm(obs)
+        noise_norm = np.linalg.norm(noise)
+        self.write_row([str(self.iteration), str(obs_norm), str(noise_norm)])
+        self.iteration += 1
+
+
+    def write_row(self, information):
+        if (self.logFile == None):
+            return
+        with open(self.logFile, 'a') as csvfile:
+            writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(information)
 
 
     @overrides
