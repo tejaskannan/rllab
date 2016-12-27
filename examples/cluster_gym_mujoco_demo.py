@@ -1,14 +1,16 @@
-from rllab.algos.trpo import TRPO
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.box2d.cartpole_env import CartpoleEnv
 from rllab.envs.normalized_env import normalize
+from sandbox.rocky.tf.envs.base import TfEnv
+from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from sandbox.rocky.tf.algos.trpo import TRPO
 from rllab.misc.instrument import stub, run_experiment_lite
-from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from rllab.envs.gym_env import GymEnv
 import sys
 
 stub(globals())
 
 from rllab.misc.instrument import VariantGenerator, variant
+
 
 class VG(VariantGenerator):
 
@@ -24,12 +26,13 @@ variants = VG().variants()
 
 for v in variants:
 
-    env = normalize(CartpoleEnv())
+    env = TfEnv(normalize(GymEnv('HalfCheetah-v1', record_video=False, record_log=False)))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
         # The neural network policy should have two hidden layers, each with 32 hidden units.
-        hidden_sizes=(32, 32)
+        hidden_sizes=(32, 32),
+        name="policy"
     )
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)

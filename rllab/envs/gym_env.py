@@ -30,7 +30,6 @@ class CappedCubicVideoSchedule(object):
 
 
 class FixedIntervalVideoSchedule(object):
-
     def __init__(self, interval):
         self.interval = interval
 
@@ -89,6 +88,11 @@ class GymEnv(Env, Serializable):
         return self._horizon
 
     def reset(self):
+        if hasattr(self.env, 'monitor'):
+            if hasattr(self.env.monitor, 'stats_recorder'):
+                recorder = self.env.monitor.stats_recorder
+                if recorder is not None:
+                    recorder.done = True
         return self.env.reset()
 
     def step(self, action):
