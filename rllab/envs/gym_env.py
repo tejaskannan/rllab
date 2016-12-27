@@ -1,7 +1,8 @@
 import gym
 import gym.envs
 import gym.spaces
-from gym.monitoring import monitor
+# from gym.monitoring import monitor_manager as monitor
+from gym.wrappers.monitoring import Monitor
 import os
 import os.path as osp
 from rllab.envs.base import Env, Step
@@ -55,7 +56,7 @@ class GymEnv(Env, Serializable):
         self.env = env
         self.env_id = env.spec.id
 
-        monitor.logger.setLevel(logging.WARNING)
+        # monitor.logger.setLevel(logging.WARNING)
 
         assert not (not record_log and record_video)
 
@@ -67,7 +68,9 @@ class GymEnv(Env, Serializable):
             else:
                 if video_schedule is None:
                     video_schedule = CappedCubicVideoSchedule()
-            self.env.monitor.start(log_dir, video_schedule, force=True)  # add 'force=True' if want overwrite dirs
+            mon = Monitor(log_dir, video_schedule, force=True)
+            env = mon(env)   
+            # self.env.monitor.start(log_dir, video_schedule, force=True)  # add 'force=True' if want overwrite dirs
             self.monitoring = True
 
         self._observation_space = convert_gym_space(env.observation_space)
@@ -88,11 +91,11 @@ class GymEnv(Env, Serializable):
         return self._horizon
 
     def reset(self):
-        if hasattr(self.env, 'monitor'):
-            if hasattr(self.env.monitor, 'stats_recorder'):
-                recorder = self.env.monitor.stats_recorder
-                if recorder is not None:
-                    recorder.done = True
+        # if hasattr(self.env, 'monitor'):
+        #     if hasattr(self.env.monitor, 'stats_recorder'):
+        #         recorder = self.env.monitor.stats_recorder
+        #         if recorder is not None:
+        #             recorder.done = True
         return self.env.reset()
 
     def step(self, action):
@@ -104,7 +107,8 @@ class GymEnv(Env, Serializable):
 
     def terminate(self):
         if self.monitoring:
-            self.env.monitor.close()
+            # self.env.monitor.close()
+            self.env.close()
             if self._log_dir is not None:
                 print("""
     ***************************
