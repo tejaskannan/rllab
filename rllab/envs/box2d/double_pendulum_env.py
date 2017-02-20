@@ -60,3 +60,7 @@ class DoublePendulumEnv(Box2DEnv, Serializable):
     def is_current_done(self):
         return False
 
+    @property
+    def horizon(self):
+        return 500
+

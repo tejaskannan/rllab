@@ -18,8 +18,9 @@ class GaussianNoiseEnv(GeneralizedNoisyEnv, Serializable):
 	@overrides
 	def inject_obs_noise(self, obs):
 		noise = (np.random.standard_normal(size=obs.shape) * self.sigma) + self.mu
+		noisy_obs = noise + obs
 		# super(GaussianNoiseEnv, self).log_snr(obs, noise)
-		return obs + noise
+		return noisy_obs
 
 # Environment with Laplace Noise
 class LaplaceNoiseEnv(GeneralizedNoisyEnv, Serializable):

@@ -22,6 +22,7 @@ class CartpoleEnv(Box2DEnv, Serializable):
         )
         self.cart = find_body(self.world, "cart")
         self.pole = find_body(self.world, "pole")
+        self._horizon = 500
         Serializable.__init__(self, *args, **kwargs)
 
     @overrides
@@ -54,4 +55,8 @@ class CartpoleEnv(Box2DEnv, Serializable):
     def is_current_done(self):
         return abs(self.cart.position[0]) > self.max_cart_pos or \
             abs(self.pole.angle) > self.max_pole_angle
+
+    @property
+    def horizon(self):
+        return self._horizon
 

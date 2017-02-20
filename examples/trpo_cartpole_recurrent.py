@@ -12,6 +12,7 @@ def run_task(*_):
 
     policy = GaussianGRUPolicy(
         env_spec=env.spec,
+        hidden_sizes=(32, )
     )
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
@@ -22,10 +23,11 @@ def run_task(*_):
         baseline=baseline,
         batch_size=4000,
         max_path_length=100,
-        n_itr=10,
+        n_itr=50,
         discount=0.99,
         step_size=0.01,
-        optimizer=ConjugateGradientOptimizer(hvp_approach=FiniteDifferenceHvp(base_eps=1e-5))
+        optimizer=ConjugateGradientOptimizer(hvp_approach=FiniteDifferenceHvp(base_eps=1e-5)),
+        plot=True
     )
     algo.train()
 
@@ -34,4 +36,5 @@ run_experiment_lite(
     run_task,
     n_parallel=1,
     seed=1,
+    plot=True
 )

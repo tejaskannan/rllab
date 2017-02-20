@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 process = None
-queue = None
+queue = Queue()
 
 
 def _worker_start():
