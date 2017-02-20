@@ -1,0 +1,2 @@
+Model Name,Algorithm,Policy,Hidden Layer 1,Hidden Layer 2,Noise Env Name,Param Start,Param Increment,Param Limit,Iterations,Log Directory Base
+LunarLanderContinuous-v2,TRPO,GaussianGRU,32,0,DroppedObservations,0.5,0.1,1,500,/home/tejas/Documents/rllab/data/local/experiment/lunar_lander_v8/
