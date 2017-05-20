@@ -46,7 +46,7 @@ def get_env(env_name):
 
 def get_env_range(env_name):
     if env_name == "Pendulum-v0":
-        return 6
+        return 4
     elif env_name == "MountainCarContinuous-v0":
         return 1
     elif env_name == "CarRacing-v0":
@@ -168,6 +168,6 @@ def run_test_csv(file_name):
 
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-file_name = os.path.join(__location__, 'configs/lunar_lander_vpg.csv')
+file_name = os.path.join(__location__, 'configs/lunar_lander_32_tnpg.csv')
 run_test_csv(file_name)
 

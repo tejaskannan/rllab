@@ -17,7 +17,7 @@ def plot(points_tuple,
              xlim=0):
 
 	rcParams.update({'figure.autolayout': True})
-	rcParams.update({'font.size': 12})
+	rcParams.update({'font.size': 16})
 	#fprop = font_manager.FontProperties(fname='/Library/Fonts/Microsoft/Gill Sans MT.ttf') 
 
 	plt.figure() 
@@ -33,7 +33,7 @@ def plot(points_tuple,
 		plt.plot(X, ya, shape[i], linewidth=2.5,markersize=7,color=colors[i])
 		i += 1
 
-	plt.legend(legend,loc=loc)
+	plt.legend(legend,loc=loc, prop={"size": 13})
 	plt.title(title)
 	plt.xlabel(xaxis)
 	plt.ylabel(yaxis)
@@ -77,13 +77,14 @@ def get_experiment_values_averaged(csv_file_paths, property_name):
 def get_performance_value(csv_file_path):
 	vals = []
 	x = []
+	print(csv_file_path)
 	iterations, rewards = get_experiment_values(csv_file_path, "AverageReturn")
 	return sum(rewards) / len(iterations)
 
 def plot_performance_values(csv_file_base, policies, noise, parameters, ymin, ymax, xLabel, yLabel="Performance"):
 	filename = "/progress.csv"
 	performances = []
-	title = "Algorithm Performance"
+	title = "Algorithm Performance as a function of " + noise + " noise"
 	for policy in policies:
 		performance = []
 		for param in parameters:
@@ -107,7 +108,7 @@ def plot_performance_median_trpo_vpg(csv_trpos, csv_vpgs, parameters, policies, 
 		for param in parameters:
 			trpo_param = []
 			for csv_trpo in csv_trpos:
-				trpo_progress = "/home/tejas/Documents/rllab/data/local/experiment/lunar_lander_trpo_v" + str(csv_trpo) + "/" + noise + "_" + policy + "_" + str(round(param, 3)) + filename
+				trpo_progress = "/home/tejas/Documents/rllab/data/local/experiment/lunar_lander_trpo_v" + str(csv_trpo) + "/" + noise + "_GaussianMLP_32_32_" + str(round(param, 3)) + filename
 				trpo_perf = get_performance_value(trpo_progress)
 				trpo_param.append(trpo_perf)
 			trpo_val = np.median(np.array(trpo_param))
@@ -115,7 +116,7 @@ def plot_performance_median_trpo_vpg(csv_trpos, csv_vpgs, parameters, policies, 
 
 			vpg_param = []
 			for csv_vpg in csv_vpgs:
-				vpg_progress = "/home/tejas/Documents/rllab/data/local/experiment/lunar_lander_v" + str(csv_vpg) + "/" + noise + "_" + "GaussianGRU_32_0" + "_" + str(round(param, 3)) + filename
+				vpg_progress = "/home/tejas/Documents/rllab/data/local/experiment/lunar_lander_v" + str(csv_vpg) + "/" + noise + "_GaussianMLP_32_32_" + str(round(param, 3)) + filename
 				print(vpg_progress)
 				vpg_perf = get_performance_value(vpg_progress)
 				vpg_param.append(vpg_perf)
@@ -124,19 +125,20 @@ def plot_performance_median_trpo_vpg(csv_trpos, csv_vpgs, parameters, policies, 
 
 		trpo_performances.append(trpo_performance)
 		vpg_performances.append(vpg_performance)
-	graphFileName = "/home/tejas/Documents/rllab/data/local/experiment/TRPO_GRU_Performance_" + noise + ".png"
+	graphFileName = "/home/tejas/Documents/rllab/data/local/experiment/TRPO_Median_Performance_" + noise + ".png"
 	rounded = [round(x, 3) for x in parameters]
 	plot((rounded, [trpo_performance, vpg_performance]), title, xLabel, yLabel, legend=["MLP", "GRU"], ymin=ymin, ymax=ymax, filename=graphFileName)
 	#graphFileName = "/home/tejas/Documents/rllab/data/local/experiment/VPG_Performance_" + noise + ".png"
 	#plot((rounded, vpg_performances), title, xLabel, yLabel, legend=["VPG, Gaussian MLP"], ymin=ymin, ymax=ymax, filename=graphFileName)
 
-def plot_performance_values_multiple(folders, graph_name, parameters, policies, noise, ymin, ymax, series, xLabel, yLabel="Performance"):
+def plot_performance_values_multiple(folders, graph_name, parameters, policies, noise, ymin, ymax, series, xLabel, yLabel="Performance Metric Value"):
 	filename = "/progress.csv"
 	performances = []
 	for _ in range(0, len(folders)):
 		performances.append([])
 
-	title = "Algorithm Performance"
+	#title = "Algorithm Performance as " + noise + " Noise Increases" 
+	title = "Performance with Gaussian Noise"
 	for param in parameters:
 		for csv_num in range(0, len(folders)):
 			progress = "/home/tejas/Documents/rllab/data/local/experiment/" + folders[csv_num] + "/" + noise + "_" + policies[csv_num] + "_" + str(round(param, 3)) + filename
@@ -276,7 +278,7 @@ def plot_learning_curve_averaged(paths, noise_name, policy_name, parameter, ymin
 file_path_base = "/home/tejas/Documents/rllab/data/local/experiment/lunar_lander_vpq_v1/"
 variables = [x*0.1 for x in range(0,6)]
 #policies = ["GaussianGRU_32_0"]
-policies = ["GaussianGRU_32_0", "GaussianGRU_32_0"]
+policies = ["GaussianMLP_32_32", "GaussianGRU_32_0", "GaussianMLP_32_32", "GaussianMLP_32_32", "GaussianMLP_32_32", "GaussianMLP_32_32", "GaussianMLP_32_32"]
 #plot_performance_values(file_path_base, policies, "Gaussian", variables, -100, 100, "SNR")
 # plot_learning_curves(file_path_base, "Gaussian", "GaussianMLP_32_32", 0.0, 0.3, 0.1, -500, 300)
 #plot_performance_values(file_path_base, policies, "Laplace", variables, iterations, -1200, 0, "Scale Factor")
@@ -285,10 +287,15 @@ policies = ["GaussianGRU_32_0", "GaussianGRU_32_0"]
 
 #plot_performance_median_trpo_vpg([1,2,3], [5], variables, policies, "Gaussian", -150, 150, "SNR")
 
-folders = ["lunar_lander_trpo_gru_v1", "lunar_lander_trpo_gru_v2"]
-series = ["GRU, Trial 1", "GRU, Trial 2"]
+#folders = ["pendulum_trpo_mlp_v1", "pendulum_trpo_mlp_v2", "pendulum_trpo_mlp_v3", "pendulum_vpg_mlp_v5", "pendulum_vpg_mlp_v6", "pendulum_vpg_mlp_v7"]
+#folders = ["lunar_lander_trpo_gru_v1", "lunar_lander_trpo_gru_v2"]
+#series = ["TRPO, GRU, Trial 1", "TRPO, GRU, Trial 2"]
+#series = ["TRPO, Trial 1", "TRPO, Trial 2", "TRPO, Trial 3", "VPG, Trial 1", "VPG, Trial 2", "VPG, Trial 3"]
 
-plot_performance_values_multiple(folders, "TRPO_GRU_Performances", variables, policies, "Gaussian", -175, 175, series, "SNR")
+folders = ["lunar_lander_v6", "lunar_lander_v8"]
+series = ["TRPO, MLP", "TRPO, GRU"]
+
+plot_performance_values_multiple(folders, "Lander_Dropped_Performances", variables, policies, "DroppedObservations", -205, 150, series, "Probability")
 
 
 #plot_performance_values_multiple("lunar_lander_trpo_v", 3, "TRPO_All_Performances", variables, "GaussianMLP_32_32", "Gaussian", -175, 175, "SNR")
