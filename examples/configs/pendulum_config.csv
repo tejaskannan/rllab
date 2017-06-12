@@ -1,7 +1,0 @@
-Model Name,Algorithm,Policy,Hidden Layer 1,Hidden Layer 2,Noise Env Name,Param Start,Param Increment,Param Limit,Iterations,Log Directory Base
-Pendulum-v0,VPG,GaussianMLP,32,32,Gaussian,0,0.1,0.5,500,/home/tejas/Documents/rllab/data/local/experiment/pendulum_vpg_mlp_v5/
-Pendulum-v0,VPG,GaussianMLP,32,32,Gaussian,0,0.1,0.5,500,/home/tejas/Documents/rllab/data/local/experiment/pendulum_vpg_mlp_v6/
-Pendulum-v0,VPG,GaussianMLP,32,32,Gaussian,0,0.1,0.5,500,/home/tejas/Documents/rllab/data/local/experiment/pendulum_vpg_mlp_v7/
-Pendulum-v0,TRPO,GaussianGRU,32,0,Gaussian,0,0.1,0.5,150,/home/tejas/Documents/rllab/data/local/experiment/pendulum_trpo_gru_v1/
-Pendulum-v0,TRPO,GaussianGRU,32,0,Gaussian,0,0.1,0.5,150,/home/tejas/Documents/rllab/data/local/experiment/pendulum_trpo_gru_v2/
-Pendulum-v0,TRPO,GaussianGRU,32,0,Gaussian,0,0.1,0.5,150,/home/tejas/Documents/rllab/data/local/experiment/pendulum_trpo_gru_v3/

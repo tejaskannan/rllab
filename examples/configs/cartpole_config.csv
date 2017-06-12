@@ -1,4 +1,0 @@
-Model Name,Algorithm,Policy,Hidden Layer 1,Hidden Layer 2,Noise Env Name,Param Start,Param Increment,Param Limit,Iterations,Log Directory Base
-CartpoleEnv,TRPO,GaussianMLP,32,32,Laplace,0,0.1,0.5,500,/home/tejas/Documents/rllab/data/local/experiment/cartpole_v2/
-CartpoleEnv,TRPO,GaussianMLP,32,32,DroppedObservations,0,0.1,0.5,500,/home/tejas/Documents/rllab/data/local/experiment/cartpole_v2/
-CartpoleEnv,TRPO,GaussianMLP,32,32,DroppedObservationsReplace,0,0.1,0.5,500,/home/tejas/Documents/rllab/data/local/experiment/cartpole_v2/
