@@ -10,13 +10,15 @@ from rllab.envs.noisy.random_noise import GaussianNoiseEnv
 
 
 def run_task(*_):
-    original_env = normalize(GymEnv("LunarLanderContinuous-v2", record_video=False, force_reset=True))
-    env = normalize(GaussianNoiseEnv(original_env, sigma=0.1))
+    # Please note that different environments with different action spaces may require different
+    # policies. For example with a Box action space, a GaussianMLPPolicy works, but for a Discrete
+    # action space may need to use a CategoricalMLPPolicy (see the trpo_gym_cartpole.py example)
+    env = normalize(GymEnv("Pendulum-v0"))
 
-    policy = GaussianGRUPolicy(
+    policy = GaussianMLPPolicy(
         env_spec=env.spec,
         # The neural network policy should have two hidden layers, each with 32 hidden units.
-        hidden_sizes=(32, )
+        hidden_sizes=(32, 32)
     )
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
@@ -31,7 +33,7 @@ def run_task(*_):
         discount=0.99,
         step_size=0.03,
         # Uncomment both lines (this and the plot parameter below) to enable plotting
-        plot=True,
+        #plot=True,
     )
     algo.train()
 
@@ -45,7 +47,6 @@ run_experiment_lite(
     # Specifies the seed for the experiment. If this is not provided, a random seed
     # will be used
     seed=1,
-    plot=True,
-    log_dir="/home/tejas/Documents/rllab/data/local/experiment/lunar_lander_v7/Gaussian_GaussianGRU_32_0_test"
+    # plot=True,
 )
 

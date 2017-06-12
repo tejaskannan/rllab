@@ -359,8 +359,9 @@ def run_experiment_lite(
         periodic_sync=True,
         periodic_sync_interval=15,
         sync_all_data_node_to_s3=True,
-        use_cloudpickle=True,
+        use_cloudpickle=None,
         pre_commands=None,
+        added_project_directories=[],
         **kwargs):
     """
     Serialize the stubbed method call and run the experiment using the specified mode.
@@ -390,6 +391,19 @@ def run_experiment_lite(
     :param periodic_sync_interval: Time interval between each periodic sync, in seconds.
     """
     assert stub_method_call is not None or batch_tasks is not None, "Must provide at least either stub_method_call or batch_tasks"
+
+    if use_cloudpickle is None:
+        for maybe_stub in (batch_tasks or [stub_method_call]):
+            # decide mode
+            if isinstance(maybe_stub, StubBase):
+                use_cloudpickle = False
+            else:
+                assert hasattr(maybe_stub, '__call__')
+                use_cloudpickle = True
+                # ensure variant exists
+                if variant is None:
+                    variant = dict()
+
     if batch_tasks is None:
         batch_tasks = [
             dict(
@@ -435,6 +449,8 @@ def run_experiment_lite(
             del task["variant"]
         task["remote_log_dir"] = osp.join(
             config.AWS_S3_PATH, exp_prefix.replace("_", "-"), task["exp_name"])
+        task["env"] = task.get("env", dict()) or dict()
+        task["env"]["RLLAB_USE_GPU"] = str(use_gpu)
 
     if mode not in ["local", "local_docker"] and not remote_confirmed and not dry and confirm_remote:
         remote_confirmed = query_yes_no(
@@ -512,7 +528,7 @@ def run_experiment_lite(
     elif mode == "ec2":
         if docker_image is None:
             docker_image = config.DOCKER_IMAGE
-        s3_code_path = s3_sync_code(config, dry=dry)
+        s3_code_path = s3_sync_code(config, dry=dry, added_project_directories=added_project_directories)
         launch_ec2(batch_tasks,
                    exp_prefix=exp_prefix,
                    docker_image=docker_image,
@@ -803,6 +819,7 @@ def launch_ec2(params_list, exp_prefix, docker_image, code_full_path,
         sio.write("""
             aws s3 cp --recursive {code_full_path} {local_code_path}
         """.format(code_full_path=code_full_path, local_code_path=config.DOCKER_CODE_DIR))
+
     s3_mujoco_key_path = config.AWS_CODE_SYNC_S3_PATH + '/.mujoco/'
     # sio.write("""
     #     aws s3 cp --recursive {} {} --region {}
@@ -873,6 +890,11 @@ def launch_ec2(params_list, exp_prefix, docker_image, code_full_path,
                         fi
                     done & echo log sync initiated
                 """.format(log_dir=log_dir, remote_log_dir=remote_log_dir))
+        if use_gpu:
+            sio.write("""
+                for i in {1..800}; do su -c "nvidia-modprobe -u -c=0" ubuntu && break || sleep 3; done
+                systemctl start nvidia-docker
+            """)
         sio.write("""
             {command}
         """.format(command=to_docker_command(params, docker_image, python_command=python_command, script=script,
@@ -931,6 +953,9 @@ def launch_ec2(params_list, exp_prefix, docker_image, code_full_path,
         user_data = dedent(sio.getvalue())
     else:
         user_data = full_script
+    print(full_script)
+    with open("/tmp/full_script", "w") as f:
+        f.write(full_script)
 
     instance_args = dict(
         ImageId=aws_config["image_id"],
@@ -944,6 +969,7 @@ def launch_ec2(params_list, exp_prefix, docker_image, code_full_path,
         IamInstanceProfile=dict(
             Name=aws_config["iam_instance_profile_name"],
         ),
+        **config.AWS_EXTRA_CONFIGS,
     )
 
     if len(instance_args["NetworkInterfaces"]) > 0:
@@ -1003,7 +1029,7 @@ def launch_ec2(params_list, exp_prefix, docker_image, code_full_path,
 S3_CODE_PATH = None
 
 
-def s3_sync_code(config, dry=False):
+def s3_sync_code(config, dry=False, added_project_directories=[]):
     global S3_CODE_PATH
     if S3_CODE_PATH is not None:
         return S3_CODE_PATH
@@ -1025,9 +1051,15 @@ def s3_sync_code(config, dry=False):
         file_path = "/tmp/" + file_name
 
         tar_cmd = ["tar", "-zcvf", file_path, "-C", config.PROJECT_PATH]
+
         for pattern in config.FAST_CODE_SYNC_IGNORES:
             tar_cmd += ["--exclude", pattern]
         tar_cmd += ["-h", "."]
+
+        for path in added_project_directories:
+            tar_cmd.append("-C")
+            tar_cmd.append(path)
+            tar_cmd += ["."]
 
         remote_path = "%s/%s" % (base, file_name)
 
@@ -1330,7 +1362,6 @@ def concretize(maybe_stub):
                 print(("Error while instantiating %s" % maybe_stub.proxy_class))
                 import traceback
                 traceback.print_exc()
-                # import ipdb; ipdb.set_trace()
         ret = maybe_stub.__stub_cache
         return ret
     elif isinstance(maybe_stub, dict):

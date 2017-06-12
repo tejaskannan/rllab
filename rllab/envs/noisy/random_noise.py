@@ -9,9 +9,9 @@ from rllab.core.serializable import Serializable
 # Environment with Gaussian Noise
 class GaussianNoiseEnv(GeneralizedNoisyEnv, Serializable):
 
-	def __init__(self, env, mu=0, sigma=1, log_dir=None):
-		super(GaussianNoiseEnv, self).__init__(env, log_dir)
+	def __init__(self, env, mu=0, sigma=1):
 		Serializable.quick_init(self, locals())
+		super(GaussianNoiseEnv, self).__init__(env)
 		self.mu = mu
 		self.sigma = sigma
 
@@ -19,7 +19,6 @@ class GaussianNoiseEnv(GeneralizedNoisyEnv, Serializable):
 	def inject_obs_noise(self, obs):
 		noise = (np.random.standard_normal(size=obs.shape) * self.sigma) + self.mu
 		noisy_obs = noise + obs
-		# super(GaussianNoiseEnv, self).log_snr(obs, noise)
 		return noisy_obs
 
 # Environment with Laplace Noise
